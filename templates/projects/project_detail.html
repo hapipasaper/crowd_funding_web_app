@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <h2>{{ project.title }}</h2>
+    <p>
+        <strong>Category:</strong> {{ project.category }} |
+        <strong>Creator:</strong> {{ project.creator }} |
+        <strong>Created at:</strong> {{ project.created_at|date:"Y-m-d" }}
+    </p>
+
+    <p>{{ project.details }}</p>
+
+    <!-- صور المشروع -->
+    <div class="mb-3">
+        {% for img in project.images.all %}
+            <img src="{{ img.image.url }}" alt="Project Image" style="max-width:200px; margin:5px;">
+        {% empty %}
+            <p>No images uploaded for this project.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Progress bar -->
+    <h5>Progress</h5>
+    <div class="progress mb-3" style="height: 25px;">
+        <div class="progress-bar" role="progressbar"
+             style="width: {{ progress }}%;"
+             aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+            {{ progress }}%
+        </div>
+    </div>
+    <p>{{ total_donations }} EGP raised of {{ project.target }} EGP target</p>
+
+    <!-- Tags -->
+    <p>
+        <strong>Tags:</strong>
+        {% for tag in project.tags.all %}
+            <span class="badge bg-secondary">{{ tag.name }}</span>
+        {% empty %}
+            <span>No tags</span>
+        {% endfor %}
+    </p>
+
+    <hr>
+
+    <!-- تبرع -->
+    <h4>Donate to this project</h4>
+    <form method="post">
+        {% csrf_token %}
+        {{ donation_form.as_p }}
+        <button type="submit" class="btn btn-primary">Donate</button>
+    </form>
+  
+ <!-- Rating -->
+    <h4>Average Rating: ⭐ {{ avg_rating|floatformat:1 }}</h4>
+    <form method="post" class="mt-2">
+        {% csrf_token %}
+        {{ rating_form.as_p }}
+        <button type="submit" name="rating_submit" class="btn btn-warning">Rate</button>
+    </form>
+
+    <!-- Comments -->
+    <h4 class="mt-4">Comments</h4>
+    <form method="post" class="mb-3">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit" name="comment_submit" class="btn btn-primary">Add Comment</button>
+    </form>
+
+    <ul class="list-group">
+        {% for comment in project.comments.all %}
+            {% if not comment.parent %}
+            <li class="list-group-item">
+                <b>{{ comment.user }}</b> ({{ comment.created_at|date:"Y-m-d H:i" }}): {{ comment.text }}
+
+                <!-- Reply form -->
+                <form method="post" class="mt-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="parent_id" value="{{ comment.id }}">
+                    {{ comment_form.as_p }}
+                    <button type="submit" name="comment_submit" class="btn btn-sm btn-secondary">Reply</button>
+                </form>
+
+                <!-- Replies -->
+                {% for reply in comment.replies.all %}
+ <div class="ms-4 mt-2 border-start ps-2">
+                        <b>{{ reply.user }}</b>: {{ reply.text }}
+                    </div>
+                {% endfor %}
+            </li>
+            {% endif %}
+        {% empty %}
+            <li class="list-group-item">No comments yet.</li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+    <br>
+
+    <!-- إلغاء المشروع -->
+    <form method="post" action="{% url 'projects:cancel_project' project.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">Cancel Project</button>
+    </form>
+<hr>
+<h4>Similar Projects</h4>
+<div class="row">
+    {% for p in similar_projects %}
+        <div class="col-md-3">
+            <div class="card mb-3">
+                {% if p.images.first %}
+                    <img src="{{ p.images.first.image.url }}" class="card-img-top" alt="Project image">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ p.title }}</h5>
+                    <p class="card-text">{{ p.details|truncatewords:15 }}</p>
+                    <a href="{% url 'projects:project_detail' p.pk %}" class="btn btn-sm btn-primary">View</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No similar projects found.</p>
+    {% endfor %}
+</div>
+<h4>Project Report</h4>
+    <table class="table table-bordered table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Total Donations (EGP)</th>
+                <th>Comments Count</th>
+                <th>Average Rating</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for project in projects %}
+            <tr>
+                <td>{{ project.title }}</td>
+                <td>{{ project.total_donations|default:0 }}</td>
+                <td>{{ project.comments_count }}</td>
+                <td>
+                    {% if project.avg_rating %}
+                        ⭐ {{ project.avg_rating|floatformat:1 }}
+                    {% else %}
+                        No ratings yet
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No projects found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+{% endblock %}

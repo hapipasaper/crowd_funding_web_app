@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2>🔍 Search Results for "{{ query }}"</h2>
+  <ul>
+    {% for p in projects %}
+      <li><a href="{% url 'projects:project_detail' p.pk %}">{{ p.title }}</a></li>
+    {% empty %}
+      <li>No projects found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

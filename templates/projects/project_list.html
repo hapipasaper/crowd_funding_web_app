@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- 🏆 Top Rated Carousel -->
+  <h2 class="mb-3">🏆 Top 5 Rated Projects</h2>
+  {% if top_rated %}
+  <div id="topRatedCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      {% for p in top_rated %}
+      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+        {% if p.images.first %}
+          <img src="{{ p.images.first.image.url }}" class="d-block w-100" alt="Project image" style="height: 400px; object-fit: cover;">
+        {% else %}
+          <img src="https://via.placeholder.com/800x400?text=No+Image" class="d-block w-100" alt="Placeholder">
+        {% endif %}
+        <div class="carousel-caption bg-dark bg-opacity-50 rounded p-3">
+          <h5>{{ p.title }}</h5>
+          <p>⭐ {{ p.avg_rating|default:"0"|floatformat:1 }}</p>
+          <a href="{% url 'projects:project_detail' p.pk %}" class="btn btn-warning btn-sm">View Project</a>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#topRatedCarousel" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#topRatedCarousel" data-bs-slide="next">
+      <span class="carousel-control-next-icon"></span>
+    </button>
+  </div>
+  {% else %}
+    <p>No rated projects yet.</p>
+  {% endif %}
+
+  <hr>
+
+  <!-- 📂 All Projects -->
+  <h2 class="mb-3">📂 All Projects</h2>
+  <div class="row">
+    {% for p in projects %}
+      <div class="col-md-4">
+        <div class="card mb-3 shadow-sm">
+          {% if p.images.first %}
+            <img src="{{ p.images.first.image.url }}" class="card-img-top" alt="Project image" style="height:200px; object-fit:cover;">
+          {% else %}
+            <img src="https://via.placeholder.com/400x200?text=No+Image" class="card-img-top" alt="Placeholder">
+          {% endif %}
+          <div class="card-body">
+            <h5 class="card-title">{{ p.title }}</h5>
+            <p class="card-text">{{ p.details|truncatewords:15 }}</p>
+            <a href="{% url 'projects:project_detail' p.pk %}" class="btn btn-sm btn-primary">View</a>
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      <p>No projects available.</p>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}
